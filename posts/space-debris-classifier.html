@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Debris Classifier Methods · dhruv.blog</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--white:#fff;--silver:#f0f0f0;--lgray:#d8d8d8;--mgray:#999;--dgray:#444;--black:#111;--yellow:#f5d700;--blue:#2563eb;--lblue:#dbeafe;--pink:#e91e8c;--lpink:#fce7f3;--font-serif:'DM Serif Display',Georgia,serif;--font-sans:'Inter',sans-serif;--font-mono:'DM Mono',monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--silver);color:var(--black);font-size:16px;line-height:1.75}
+  header{background:var(--white);border-bottom:1.5px solid var(--lgray);padding:0 2rem;position:sticky;top:0;z-index:10}
+  .hi{max-width:740px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:54px}
+  .logo{font-family:var(--font-serif);font-size:1.2rem;color:var(--black);text-decoration:none}
+  .logo span{color:var(--pink)}
+  .back{font-family:var(--font-mono);font-size:0.73rem;color:var(--mgray);text-decoration:none}
+  .back:hover{color:var(--pink)}
+  article{max-width:660px;margin:3rem auto;padding:0 1.5rem 4rem}
+  .cat{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:0.8rem}
+  h1{font-family:var(--font-serif);font-size:2.2rem;line-height:1.15;margin-bottom:0.9rem}
+  .meta{font-family:var(--font-mono);font-size:0.73rem;color:var(--mgray);border-bottom:1px solid var(--lgray);padding-bottom:1rem;margin-bottom:2rem}
+  .draft-badge{display:inline-block;background:var(--yellow);color:var(--black);font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.06em;padding:2px 8px;border-radius:999px;margin-left:8px;vertical-align:middle}
+  p{margin-bottom:1.1rem;color:var(--dgray);font-size:0.97rem}
+  h2{font-family:var(--font-serif);font-size:1.35rem;margin:2rem 0 0.6rem;color:var(--black)}
+  .box{background:var(--lblue);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:0.9rem 1.1rem;margin:1.4rem 0}
+  .box p{margin:0;font-size:0.88rem;color:var(--black)}
+  ul{margin:0 0 1.1rem 1.2rem;color:var(--dgray);font-size:0.95rem}
+  ul li{margin-bottom:0.35rem}
+  .todo{background:var(--lpink);border-left:3px solid var(--pink);border-radius:0 8px 8px 0;padding:0.8rem 1rem;margin-top:2rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--pink)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hi">
+    <a class="logo" href="../index.html">dhruv<span>.</span>blog</a>
+    <a class="back" href="../index.html">← Back</a>
+  </div>
+</header>
+<article>
+  <div class="cat">✦ Space · CS</div>
+  <h1>Space Debris Classifier Methods</h1>
+  <div class="meta">Draft — May 2025 · 5 min read · by Dhruv <span class="draft-badge">DRAFT</span></div>
+
+  <p>There are over 27,000 tracked objects orbiting Earth right now — and only about 3,000 are active satellites. The rest is debris: dead satellites, rocket stages, collision fragments. Classifying this debris is a real and growing problem in orbital mechanics and machine learning.</p>
+
+  <h2>Why Classification Matters</h2>
+  <p>Untracked debris as small as 1 cm can disable a spacecraft at orbital velocities (~7.5 km/s). The Kessler Syndrome — a cascade of collisions creating more debris — is not science fiction. Classification helps us prioritise what to track, avoid, and eventually remove.</p>
+
+  <div class="box">
+    <p>Key question: given radar cross-section data, TLE (Two-Line Element) orbital parameters, and optical observations — can we classify an object as rocket body, payload, debris fragment, or unknown?</p>
+  </div>
+
+  <h2>Method 1 — TLE-Based Feature Engineering</h2>
+  <p>Two-Line Element sets encode an object's orbital parameters: inclination, eccentricity, BSTAR drag term, mean motion. A classical ML pipeline (Random Forest, SVM) trained on these features achieves reasonable baseline accuracy (~78–82%) for distinguishing rocket bodies from payloads.</p>
+
+  <h2>Method 2 — Radar Cross-Section (RCS) Analysis</h2>
+  <p>RCS measures how much radar energy an object reflects. Large flat surfaces (solar panels) return very differently from tumbling cylinders (rocket stages). RCS time-series, combined with rotation period estimation, allows shape-class inference without any imagery.</p>
+
+  <h2>Method 3 — Light Curve Classification (CNN)</h2>
+  <p>Optical telescopes observe how an object's brightness changes as it tumbles. These light curves are effectively time-series signals. A 1D-CNN trained on synthetic + real light curves from the Space-Track catalogue can classify debris type with ~87% accuracy.</p>
+
+  <ul>
+    <li>Simulated light curves from known objects for training data</li>
+    <li>Data augmentation to handle rotation ambiguity</li>
+    <li>Transfer learning from satellite light curve datasets</li>
+  </ul>
+
+  <h2>My Take</h2>
+  <p>What I find fascinating is how orbital debris classification is a pure CS + physics intersection problem. The physics constrains what features are meaningful. The CS decides how to extract and use them. I want to eventually build a small classifier using public Space-Track data.</p>
+
+  <div class="todo">📝 TODO: Add confusion matrix comparison across methods · Link to Space-Track API · Build small demo classifier</div>
+</article>
+</body>
+</html>
