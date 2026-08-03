@@ -756,7 +756,6 @@
         <input type="password" id="admin-pw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
         <div style="margin-top:0.5rem">
           <button class="btn btn-primary" onclick="adminLogin()">Sign In</button>
-          <button class="btn btn-secondary" onclick="adminRegister()">Create Account</button>
         </div>
         <div class="error" id="admin-error"></div>
       </div>
@@ -1174,19 +1173,6 @@
     if (!email || !pw) { document.getElementById('admin-error').textContent = 'Enter email and password.'; return; }
     try {
       await auth.signInWithEmailAndPassword(email, pw);
-      showAdminPanel();
-    } catch(e) {
-      document.getElementById('admin-error').textContent = friendlyError(e.code);
-    }
-  }
-
-  async function adminRegister() {
-    const email = document.getElementById('admin-email').value.trim();
-    const pw = document.getElementById('admin-pw').value;
-    if (!email || !pw) { document.getElementById('admin-error').textContent = 'Enter email and password.'; return; }
-    if (pw.length < 6) { document.getElementById('admin-error').textContent = 'Password must be at least 6 characters.'; return; }
-    try {
-      await auth.createUserWithEmailAndPassword(email, pw);
       showAdminPanel();
     } catch(e) {
       document.getElementById('admin-error').textContent = friendlyError(e.code);
