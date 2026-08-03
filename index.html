@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
   :root {
     --white:   #ffffff;
@@ -557,6 +558,114 @@
     font-size: 0.82rem;
     font-style: italic;
   }
+
+  /* ─── MD UPLOAD ─── */
+  .md-upload-box {
+    border: 2px dashed var(--lgray);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-top: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .md-upload-box:hover { border-color: var(--accent); background: var(--silver); }
+  .md-upload-box input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .md-upload-box .upload-icon { font-size: 1.6rem; margin-bottom: 4px; }
+  .md-upload-box .upload-text {
+    font-size: 0.85rem;
+    color: var(--dgray);
+    font-weight: 500;
+  }
+  .md-upload-box .upload-hint {
+    font-size: 0.72rem;
+    color: var(--mgray);
+    margin-top: 2px;
+  }
+  .md-preview-toggle {
+    margin-top: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: none;
+    border: 1px solid var(--lgray);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--dgray);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .md-preview-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  #content-preview {
+    border: 1px solid var(--lgray);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin-top: 0.6rem;
+    background: var(--silver);
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--dgray);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  #content-preview p { margin-bottom: 0.8rem; }
+  #content-preview h1, #content-preview h2, #content-preview h3 {
+    font-family: var(--font-serif);
+    margin: 1rem 0 0.5rem;
+    color: var(--black);
+  }
+  #content-preview h1 { font-size: 1.4rem; }
+  #content-preview h2 { font-size: 1.2rem; }
+  #content-preview h3 { font-size: 1.05rem; }
+  #content-preview ul, #content-preview ol { margin: 0 0 0.8rem 1.2rem; }
+  #content-preview li { margin-bottom: 0.25rem; }
+  #content-preview blockquote {
+    border-left: 3px solid var(--accent);
+    background: var(--laccent);
+    padding: 0.4rem 0.8rem;
+    margin: 0.8rem 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-style: italic;
+  }
+  #content-preview code {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    background: var(--white);
+    border: 1px solid var(--lgray);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  #content-preview pre {
+    background: var(--black);
+    color: var(--white);
+    padding: 0.9rem;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    margin-bottom: 0.8rem;
+  }
+  #content-preview pre code { background: none; border: none; padding: 0; color: var(--white); }
+  #content-preview img { max-width: 100%; border-radius: var(--radius); margin: 0.5rem 0; }
+  .md-image-missing {
+    display: inline-block;
+    border: 2px dashed var(--lgray);
+    border-radius: var(--radius);
+    padding: 0.7rem 1rem;
+    color: var(--mgray);
+    font-size: 0.8rem;
+    background: var(--silver);
+    margin: 0.5rem 0;
+  }
+  .modal-content .body img, #content-preview img { max-width: 100%; border-radius: var(--radius); margin: 0.5rem 0; }
 </style>
 </head>
 <body>
@@ -669,6 +778,18 @@
 
       <label>Content (HTML supported)</label>
       <textarea id="post-content" placeholder="Write your post content here..."></textarea>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="md-preview-toggle" onclick="togglePreview()">Preview</button>
+        <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--mgray)">or write in HTML / Markdown</span>
+      </div>
+      <div id="content-preview" style="display:none"></div>
+
+      <div class="md-upload-box">
+        <input type="file" id="md-upload" accept=".md,.markdown,.txt,image/*" multiple onchange="importMarkdown(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Import Markdown from Notion</div>
+        <div class="upload-hint">Select the .md file <strong>together with all its images</strong> (hold Ctrl to multi-select)</div>
+      </div>
 
       <div class="btn-row">
         <button class="btn btn-primary" onclick="savePost()" id="save-post-btn">Publish Post</button>
@@ -716,7 +837,12 @@
   }
 
   function savePosts(posts) {
-    localStorage.setItem('ved_blog_posts', JSON.stringify(posts));
+    try {
+      localStorage.setItem('ved_blog_posts', JSON.stringify(posts));
+    } catch (err) {
+      showToast('Storage full! Images are too large. Compress them and try again.');
+      throw err;
+    }
   }
 
   function renderPosts() {
@@ -860,6 +986,79 @@
     return d.innerHTML;
   }
 
+  // ─── MARKDOWN IMPORT ───
+  function toHtml(md) {
+    if (typeof marked !== 'undefined' && marked.parse) {
+      return marked.parse(md);
+    }
+    // Fallback: very basic converter if CDN fails
+    let h = escapeHtml(md);
+    h = h.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+    h = h.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+    h = h.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+    h = h.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/^[-*] (.*)$/gm, '<li>$1</li>');
+    h = h.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    h = h.replace(/^(?!<[^>]+>)(.+)$/gm, '<p>$1</p>');
+    return h;
+  }
+
+  function importMarkdown(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    const mdFile = files.find(f => /\.md$/i.test(f.name)) || files[0];
+    const images = files.filter(f => f.type && f.type.startsWith('image/'));
+    const readImage = img => new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res({ name: img.name, data: r.result });
+      r.readAsDataURL(img);
+    });
+    Promise.all(images.map(readImage)).then(loaded => {
+      const map = {};
+      loaded.forEach(img => {
+        map[img.name.toLowerCase()] = img.data;
+        map[img.name.replace(/\.[^.]+$/, '').toLowerCase()] = img.data;
+      });
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        let md = e.target.result;
+        const h1Match = md.match(/^#\s+(.+)$/m);
+        const title = h1Match ? h1Match[1].trim() : mdFile.name.replace(/\.md$/i, '').replace(/[-_]+/g, ' ');
+        if (h1Match) md = md.replace(/^#\s+.+\n?/, '');
+        md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+          const clean = src.split('#')[0].split('?')[0];
+          const key = clean.split(/[\\/]/).pop().toLowerCase();
+          const base = key.replace(/\.[^.]+$/, '');
+          const data = map[key] || map[base];
+          if (data) return `![${alt}](${data})`;
+          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(clean)}">🖼️ ${escapeHtml(alt) || 'Image not uploaded'}</div>`;
+        });
+        const html = toHtml(md);
+        document.getElementById('post-title').value = title;
+        document.getElementById('post-content').value = html;
+        document.getElementById('post-excerpt').value = title;
+        document.getElementById('content-preview').innerHTML = html;
+        document.getElementById('content-preview').style.display = 'block';
+        showToast('Markdown imported. Review the preview, then publish.');
+      };
+      reader.readAsText(mdFile);
+    });
+    event.target.value = '';
+  }
+
+  function togglePreview() {
+    const preview = document.getElementById('content-preview');
+    const textarea = document.getElementById('post-content');
+    if (preview.style.display !== 'none') {
+      preview.style.display = 'none';
+      textarea.style.display = 'block';
+    } else {
+      preview.innerHTML = textarea.value;
+      preview.style.display = 'block';
+      textarea.style.display = 'none';
+    }
+  }
+
   // ─── TABS ───
   const btns = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.tab-panel');
@@ -914,6 +1113,10 @@
     document.getElementById('post-cat').value = 'Tech';
     document.getElementById('post-excerpt').value = '';
     document.getElementById('post-content').value = '';
+    const preview = document.getElementById('content-preview');
+    if (preview) { preview.innerHTML = ''; preview.style.display = 'none'; }
+    const ta = document.getElementById('post-content');
+    if (ta) ta.style.display = 'block';
     editingId = null;
     document.getElementById('save-post-btn').textContent = 'Publish Post';
   }
@@ -963,6 +1166,10 @@
     document.getElementById('post-excerpt').value = p.excerpt;
     document.getElementById('post-content').value = p.content;
     document.getElementById('save-post-btn').textContent = 'Update Post';
+    const preview = document.getElementById('content-preview');
+    if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+    const ta = document.getElementById('post-content');
+    if (ta) ta.style.display = 'block';
   }
 
   function deletePost(id) {
