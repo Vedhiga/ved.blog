@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,6 +11,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
 <style>
   :root {
     --white:   #ffffff;
@@ -283,7 +287,7 @@
     font-style: italic;
   }
 
-  /* ─── ABOUT ─── */
+  /* â”€â”€â”€ ABOUT â”€â”€â”€ */
   .about-card {
     background: var(--white);
     border: 1px solid var(--lgray);
@@ -326,7 +330,7 @@
     letter-spacing: 0.03em;
   }
 
-  /* ─── ADMIN ─── */
+  /* â”€â”€â”€ ADMIN â”€â”€â”€ */
   .admin-overlay {
     display: none;
     position: fixed;
@@ -425,7 +429,7 @@
   .admin-post-item .actions button:hover { background: var(--silver); }
   .admin-post-item .actions .del:hover { color: #dc2626; border-color: #dc2626; }
 
-  /* ─── FOOTER ─── */
+  /* â”€â”€â”€ FOOTER â”€â”€â”€ */
   footer {
     text-align: center;
     padding: 2rem 1rem 2.5rem;
@@ -437,7 +441,7 @@
   footer a { color: var(--mgray); text-decoration: none; }
   footer a:hover { color: var(--accent); }
 
-  /* ─── TOAST ─── */
+  /* â”€â”€â”€ TOAST â”€â”€â”€ */
   .toast {
     position: fixed;
     bottom: 2rem;
@@ -467,7 +471,7 @@
     margin-left: 6px;
   }
 
-  /* ─── LIKE / COMMENTS ─── */
+  /* â”€â”€â”€ LIKE / COMMENTS â”€â”€â”€ */
   .post-actions {
     display: flex;
     align-items: center;
@@ -559,7 +563,7 @@
     font-style: italic;
   }
 
-  /* ─── MD UPLOAD ─── */
+  /* â”€â”€â”€ MD UPLOAD â”€â”€â”€ */
   .md-upload-box {
     border: 2px dashed var(--lgray);
     border-radius: var(--radius);
@@ -681,24 +685,24 @@
 </header>
 
 <main>
-  <!-- ═══════════ POSTS ═══════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â• POSTS â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="tab-panel active" id="tab-posts">
     <div class="hero">
       <h1>Welcome to my little corner of the internet.</h1>
-      <p>I'm Vedhiga — I love working with data, get excited about mathematics, and dream about space. This is where I share what I'm learning, building, and thinking about.</p>
+      <p>I'm Vedhiga â€” I love working with data, get excited about mathematics, and dream about space. This is where I share what I'm learning, building, and thinking about.</p>
     </div>
     <div class="section-label">Latest Posts</div>
     <div class="post-grid" id="post-grid"></div>
   </div>
 
-  <!-- ═══════════ ABOUT ═══════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â• ABOUT â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="tab-panel" id="tab-about">
     <div class="about-card">
       <div class="avatar">V</div>
       <div class="about-text">
         <h2>Hi, I'm <em>Vedhiga V. B.</em></h2>
         <p>I work with data analysis and I'm deeply interested in mathematics and space technology. This blog is where I share what I learn along the way.</p>
-        <p style="margin-top:0.75rem;">I believe in keeping things simple — breaking down complex ideas into clear, practical insights. Whether it's a data project, a math concept, or something about space, I write to understand better and share that understanding.</p>
+        <p style="margin-top:0.75rem;">I believe in keeping things simple â€” breaking down complex ideas into clear, practical insights. Whether it's a data project, a math concept, or something about space, I write to understand better and share that understanding.</p>
         <div class="about-tags">
           <span class="about-tag">Data Analysis</span>
           <span class="about-tag">Math</span>
@@ -713,7 +717,7 @@
   <strong>ved.blog</strong> &middot; Built with vanilla everything
 </footer>
 
-<!-- ─── POST MODAL ─── -->
+<!-- â”€â”€â”€ POST MODAL â”€â”€â”€ -->
 <div class="modal-overlay" id="post-modal">
   <div class="modal-content">
     <button class="modal-close" id="modal-close">&times;</button>
@@ -741,15 +745,19 @@
   </div>
 </div>
 
-<!-- ─── ADMIN PANEL ─── -->
+<!-- â”€â”€â”€ ADMIN PANEL â”€â”€â”€ -->
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-panel">
     <div id="admin-login">
       <div class="login-form">
         <h2>Admin Access</h2>
-        <p class="sub">Enter the admin password to manage posts.</p>
-        <input type="password" id="admin-pw" placeholder="Password" onkeydown="if(event.key==='Enter')adminLogin()">
-        <div style="margin-top:0.5rem"><button class="btn btn-primary" onclick="adminLogin()">Unlock</button></div>
+        <p class="sub">Sign in to manage posts.</p>
+        <input type="email" id="admin-email" placeholder="Email" autocomplete="email">
+        <input type="password" id="admin-pw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+        <div style="margin-top:0.5rem">
+          <button class="btn btn-primary" onclick="adminLogin()">Sign In</button>
+          <button class="btn btn-secondary" onclick="adminRegister()">Create Account</button>
+        </div>
         <div class="error" id="admin-error"></div>
       </div>
     </div>
@@ -786,7 +794,7 @@
 
       <div class="md-upload-box">
         <input type="file" id="md-upload" accept=".md,.markdown,.txt,image/*" multiple onchange="importMarkdown(event)">
-        <div class="upload-icon">📄</div>
+        <div class="upload-icon">ðŸ“„</div>
         <div class="upload-text">Import Markdown from Notion</div>
         <div class="upload-hint">Select the .md file <strong>together with all its images</strong> (hold Ctrl to multi-select)</div>
       </div>
@@ -805,77 +813,91 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const ADMIN_PASSWORD = 'ved475';
-  const BLOG_DATA_VERSION = 2;
+
+  // â”€â”€â”€ FIREBASE â”€â”€â”€
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHL-hFrms1ean2eqTiYZyrkltXYDQXAJs",
+    authDomain: "my-blog-ec21d.firebaseapp.com",
+    projectId: "my-blog-ec21d",
+    storageBucket: "my-blog-ec21d.firebasestorage.app",
+    messagingSenderId: "640741048415",
+    appId: "1:640741048415:web:9bb25822db0914945edbea",
+    measurementId: "G-2HBKV44TMW"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  try { firebase.analytics(); } catch(e) {}
+
   let editingId = null;
   let currentPostId = null;
+  let postsCache = [];
 
   const DEFAULT_POSTS = [{
-    id: 1,
-    title: 'Perfect Questions, Perfect Answers — A Book That Answered All My Questions',
+    title: 'Perfect Questions, Perfect Answers â€” A Book That Answered All My Questions',
     category: 'General',
     excerpt: 'How a simple book of dialogue between a spiritual seeker and his guru addressed the deepest questions I never knew I had.',
-    content: '<p>Some books inform. Some books inspire. And then there are books that feel like they were written just for you — as if the author is sitting across from you, patiently answering every question you ever carried silently in your heart.</p><p><em>Perfect Questions, Perfect Answers</em> by His Divine Grace A.C. Bhaktivedanta Swami Prabhupada is exactly that kind of book.</p><h3>What Is This Book?</h3><p>It is a transcript of an actual conversation between Srila Prabhupada and Bob Cohen, a young Peace Corps volunteer who visited Srila Prabhupada in 1972. Bob came with questions — honest, searching, sometimes skeptical questions — and Srila Prabhupada answered each one with the clarity of someone who sees reality as it is.</p><p>The beauty of the book lies in its format: no chapters, no theories. Just question after question, answer after answer. It is not a lecture. It is a dialogue.</p><h3>Why It Resonates</h3><p>Reading this book, I felt like the questions Bob asked were the same ones I had been asking myself:</p><ul><li>What is the purpose of life?</li><li>Why is there suffering?</li><li>Is God real, and can we know Him?</li><li>What happens after death?</li><li>How should I actually live?</li></ul><p>And each time, Srila Prabhupada answered with simplicity. Not the simplicity of oversimplification, but the simplicity of a master who has penetrated the subject. He quotes the Vedas, uses analogies from everyday life, and never dodges a question.</p><h3>A Few Lines That Stayed With Me</h3><blockquote>"You are not this body. You are spirit soul. The sooner you realise this, the sooner your real life begins."</blockquote><p>This idea — that I am not the body but the soul within — was not new to me. But reading it in the context of a real conversation, with real pushback from Bob, made it click in a way it never had before.</p><blockquote>"The general disease of the modern world is that everyone is trying to be the master. But we are not masters — we are servants. The question is only whom we choose to serve."</blockquote><p>Harsh? Maybe. But honest. And truth, even when uncomfortable, has a way of settling into the bones.</p><h3>Who Should Read It</h3><p>If you have ever felt that the answers offered by modern life are incomplete; if you have wondered whether there is more to existence than career, consumption, and comfort; if you are looking for a book that does not preach but converses — this book is for you.</p><p>It is also an excellent starting point for anyone curious about Vedic philosophy but intimidated by the volume of texts like the Bhagavad Gita or Srimad-Bhagavatam. The conversational format makes it easy to digest without losing depth.</p><h3>Final Thoughts</h3><p>I finished <em>Perfect Questions, Perfect Answers</em> in one sitting. But I have returned to specific pages many times since. A good book answers your questions. A great book changes the way you ask them.</p><p>This one did both.</p>',
+    content: '<p>Some books inform. Some books inspire. And then there are books that feel like they were written just for you â€” as if the author is sitting across from you, patiently answering every question you ever carried silently in your heart.</p><p><em>Perfect Questions, Perfect Answers</em> by His Divine Grace A.C. Bhaktivedanta Swami Prabhupada is exactly that kind of book.</p><h3>What Is This Book?</h3><p>It is a transcript of an actual conversation between Srila Prabhupada and Bob Cohen, a young Peace Corps volunteer who visited Srila Prabhupada in 1972. Bob came with questions â€” honest, searching, sometimes skeptical questions â€” and Srila Prabhupada answered each one with the clarity of someone who sees reality as it is.</p><p>The beauty of the book lies in its format: no chapters, no theories. Just question after question, answer after answer. It is not a lecture. It is a dialogue.</p><h3>Why It Resonates</h3><p>Reading this book, I felt like the questions Bob asked were the same ones I had been asking myself:</p><ul><li>What is the purpose of life?</li><li>Why is there suffering?</li><li>Is God real, and can we know Him?</li><li>What happens after death?</li><li>How should I actually live?</li></ul><p>And each time, Srila Prabhupada answered with simplicity. Not the simplicity of oversimplification, but the simplicity of a master who has penetrated the subject. He quotes the Vedas, uses analogies from everyday life, and never dodges a question.</p><h3>A Few Lines That Stayed With Me</h3><blockquote>"You are not this body. You are spirit soul. The sooner you realise this, the sooner your real life begins."</blockquote><p>This idea â€” that I am not the body but the soul within â€” was not new to me. But reading it in the context of a real conversation, with real pushback from Bob, made it click in a way it never had before.</p><blockquote>"The general disease of the modern world is that everyone is trying to be the master. But we are not masters â€” we are servants. The question is only whom we choose to serve."</blockquote><p>Harsh? Maybe. But honest. And truth, even when uncomfortable, has a way of settling into the bones.</p><h3>Who Should Read It</h3><p>If you have ever felt that the answers offered by modern life are incomplete; if you have wondered whether there is more to existence than career, consumption, and comfort; if you are looking for a book that does not preach but converses â€” this book is for you.</p><p>It is also an excellent starting point for anyone curious about Vedic philosophy but intimidated by the volume of texts like the Bhagavad Gita or Srimad-Bhagavatam. The conversational format makes it easy to digest without losing depth.</p><h3>Final Thoughts</h3><p>I finished <em>Perfect Questions, Perfect Answers</em> in one sitting. But I have returned to specific pages many times since. A good book answers your questions. A great book changes the way you ask them.</p><p>This one did both.</p>',
     date: '2025-07-24',
-    featured: true
+    featured: true,
+    likes: 0
   }];
 
-  function getPosts() {
-    try {
-      const version = localStorage.getItem('ved_blog_version');
-      if (version !== String(BLOG_DATA_VERSION)) {
-        localStorage.setItem('ved_blog_version', String(BLOG_DATA_VERSION));
-        localStorage.setItem('ved_blog_posts', JSON.stringify(DEFAULT_POSTS));
-        return JSON.parse(JSON.stringify(DEFAULT_POSTS));
-      }
-      const data = localStorage.getItem('ved_blog_posts');
-      if (data) return JSON.parse(data);
-    } catch(e) {}
-    localStorage.setItem('ved_blog_version', String(BLOG_DATA_VERSION));
-    localStorage.setItem('ved_blog_posts', JSON.stringify(DEFAULT_POSTS));
-    return JSON.parse(JSON.stringify(DEFAULT_POSTS));
+  // â”€â”€â”€ POSTS (Firestore) â”€â”€â”€
+  async function getPosts() {
+    const snap = await db.collection('posts').orderBy('date', 'desc').get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 
-  function savePosts(posts) {
-    try {
-      localStorage.setItem('ved_blog_posts', JSON.stringify(posts));
-    } catch (err) {
-      showToast('Storage full! Images are too large. Compress them and try again.');
-      throw err;
-    }
+  async function seedIfEmpty() {
+    const snap = await db.collection('posts').limit(1).get();
+    if (!snap.empty) return;
+    const batch = db.batch();
+    DEFAULT_POSTS.forEach(p => {
+      const ref = db.collection('posts').doc();
+      batch.set(ref, { title: p.title, category: p.category, excerpt: p.excerpt, content: p.content, date: p.date, featured: p.featured, likes: 0 });
+    });
+    await batch.commit();
+    console.log('[VedBlog] Seeded default posts to Firestore.');
   }
 
-  function renderPosts() {
+  async function renderPosts() {
     const grid = document.getElementById('post-grid');
-    const posts = getPosts();
-    if (!posts.length) {
+    grid.innerHTML = '<div class="empty-state">Loading posts...</div>';
+    try {
+      postsCache = await getPosts();
+    } catch(e) {
+      console.error('[VedBlog] Load posts failed:', e);
+      grid.innerHTML = '<div class="empty-state">Failed to load posts. Check your connection.</div>';
+      return;
+    }
+    if (!postsCache.length) {
       grid.innerHTML = '<div class="empty-state">No posts yet. Check back soon.</div>';
       return;
     }
-    grid.innerHTML = posts.map((p, i) => {
+    grid.innerHTML = postsCache.map(p => {
       const feat = p.featured ? ' featured' : '';
-      return `<div class="post-card${feat}" onclick="openPost(${i})">
-        <span class="cat">${p.category}</span>
-        <h3>${p.title}</h3>
-        <p class="excerpt">${p.excerpt}</p>
-        <span class="meta">${p.date}</span>
+      return `<div class="post-card${feat}" onclick="openPost('${p.id}')">
+        <span class="cat">${escapeHtml(p.category || '')}</span>
+        <h3>${escapeHtml(p.title)}</h3>
+        <p class="excerpt">${escapeHtml(p.excerpt || '')}</p>
+        <span class="meta">${p.date || ''} Â· â™¥ ${p.likes || 0}</span>
       </div>`;
     }).join('');
   }
 
-  function openPost(index) {
-    const posts = getPosts();
-    const p = posts[index];
+  async function openPost(id) {
+    const p = postsCache.find(x => x.id === id);
     if (!p) return;
-    currentPostId = p.id;
-    document.getElementById('modal-cat').textContent = p.category;
+    currentPostId = id;
+    document.getElementById('modal-cat').textContent = p.category || '';
     document.getElementById('modal-title').textContent = p.title;
-    document.getElementById('modal-meta').textContent = p.date;
+    document.getElementById('modal-meta').textContent = (p.date || '') + ' Â· â™¥ ' + (p.likes || 0);
     const body = document.getElementById('modal-body');
     body.innerHTML = p.content;
     setupImgFallback(body);
-    renderLikes();
-    renderComments();
+    await renderLikes();
+    await renderComments();
     document.getElementById('post-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -898,67 +920,54 @@
     currentPostId = null;
   }
 
-  // ─── LIKES ───
-  function getLikes() {
-    try { return JSON.parse(localStorage.getItem('ved_blog_likes') || '{}'); } catch(e) { return {}; }
-  }
-  function saveLikes(likes) { localStorage.setItem('ved_blog_likes', JSON.stringify(likes)); }
-
+  // â”€â”€â”€ LIKES (Firestore + local "already liked" state) â”€â”€â”€
   function getLikedSet() {
     try { return new Set(JSON.parse(localStorage.getItem('ved_blog_liked') || '[]')); } catch(e) { return new Set(); }
   }
   function saveLikedSet(arr) { localStorage.setItem('ved_blog_liked', JSON.stringify([...arr])); }
 
-  function renderLikes() {
+  async function renderLikes() {
     if (!currentPostId) return;
-    const likes = getLikes();
-    const liked = getLikedSet();
-    const count = likes[currentPostId] || 0;
-    document.getElementById('like-count').textContent = count;
-    const btn = document.getElementById('like-btn');
-    if (liked.has(currentPostId)) btn.classList.add('liked');
-    else btn.classList.remove('liked');
-  }
-
-  function toggleLike() {
-    if (!currentPostId) return;
-    const likes = getLikes();
-    const liked = getLikedSet();
-    if (liked.has(currentPostId)) {
-      liked.delete(currentPostId);
-      likes[currentPostId] = Math.max(0, (likes[currentPostId] || 1) - 1);
-    } else {
-      liked.add(currentPostId);
-      likes[currentPostId] = (likes[currentPostId] || 0) + 1;
-    }
-    saveLikes(likes);
-    saveLikedSet(liked);
-    renderLikes();
-  }
-
-  // ─── COMMENTS ───
-  function getComments(postId) {
+    let count = 0;
     try {
-      const all = JSON.parse(localStorage.getItem('ved_blog_comments') || '{}');
-      return all[postId] || [];
-    } catch(e) { return []; }
+      const doc = await db.collection('posts').doc(currentPostId).get();
+      if (doc.exists) count = doc.data().likes || 0;
+    } catch(e) {}
+    document.getElementById('like-count').textContent = count;
+    const liked = getLikedSet();
+    document.getElementById('like-btn').classList.toggle('liked', liked.has(currentPostId));
   }
 
-  function addComment(postId, name, text) {
-    const all = JSON.parse(localStorage.getItem('ved_blog_comments') || '{}');
-    if (!all[postId]) all[postId] = [];
-    all[postId].unshift({
-      name: name.trim() || 'Anonymous',
-      text: text.trim(),
-      time: new Date().toLocaleString()
-    });
-    localStorage.setItem('ved_blog_comments', JSON.stringify(all));
+  async function toggleLike() {
+    if (!currentPostId) return;
+    const liked = getLikedSet();
+    const ref = db.collection('posts').doc(currentPostId);
+    try {
+      if (liked.has(currentPostId)) {
+        liked.delete(currentPostId);
+        await ref.update({ likes: firebase.firestore.FieldValue.increment(-1) });
+      } else {
+        liked.add(currentPostId);
+        await ref.update({ likes: firebase.firestore.FieldValue.increment(1) });
+      }
+      saveLikedSet(liked);
+      const p = postsCache.find(x => x.id === currentPostId);
+      if (p) p.likes = Math.max(0, (p.likes || 0) + (liked.has(currentPostId) ? 1 : -1));
+    } catch(e) {
+      showToast('Could not update like.');
+    }
+    await renderLikes();
   }
 
-  function renderComments() {
+  // â”€â”€â”€ COMMENTS (Firestore subcollection) â”€â”€â”€
+  async function renderComments() {
     const list = document.getElementById('comment-list');
     if (!currentPostId) { list.innerHTML = ''; return; }
-    const comments = getComments(currentPostId);
+    let comments = [];
+    try {
+      const snap = await db.collection('posts').doc(currentPostId).collection('comments').orderBy('time', 'desc').get();
+      comments = snap.docs.map(d => d.data());
+    } catch(e) { comments = []; }
     if (!comments.length) {
       list.innerHTML = '<div class="no-comments">No comments yet. Be the first.</div>';
       return;
@@ -967,19 +976,33 @@
       `<div class="comment-item">
         <div class="name">${escapeHtml(c.name)}</div>
         <div class="text">${escapeHtml(c.text)}</div>
-        <div class="time">${c.time}</div>
+        <div class="time">${formatTime(c.time)}</div>
       </div>`
     ).join('');
   }
 
-  function submitComment() {
+  async function submitComment() {
     if (!currentPostId) return;
     const name = document.getElementById('comment-name');
     const text = document.getElementById('comment-text');
     if (!text.value.trim()) return;
-    addComment(currentPostId, name.value, text.value);
-    text.value = '';
-    renderComments();
+    try {
+      await db.collection('posts').doc(currentPostId).collection('comments').add({
+        name: name.value.trim() || 'Anonymous',
+        text: text.value.trim(),
+        time: new Date().toISOString()
+      });
+      text.value = '';
+      await renderComments();
+    } catch(e) {
+      showToast('Could not post comment.');
+    }
+  }
+
+  function formatTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
   }
 
   function escapeHtml(str) {
@@ -988,12 +1011,11 @@
     return d.innerHTML;
   }
 
-  // ─── MARKDOWN IMPORT ───
+  // â”€â”€â”€ MARKDOWN IMPORT â”€â”€â”€
   function toHtml(md) {
     if (typeof marked !== 'undefined' && marked.parse) {
       return marked.parse(md);
     }
-    // Fallback: very basic converter if CDN fails
     let h = escapeHtml(md);
     h = h.replace(/^### (.*)$/gm, '<h3>$1</h3>');
     h = h.replace(/^## (.*)$/gm, '<h2>$1</h2>');
@@ -1041,14 +1063,14 @@
           const data = resolveImgSrc(src, map);
           if (data) return `![${alt}](${data})`;
           missing++;
-          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">🖼️ ${escapeHtml(alt) || 'Image not uploaded'}</div>`;
+          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">ðŸ–¼ï¸ ${escapeHtml(alt) || 'Image not uploaded'}</div>`;
         });
         md = md.replace(/<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>/gi, (match, src) => {
           refs++;
           const data = resolveImgSrc(src, map);
           if (data) return `<img src="${data}" alt="">`;
           missing++;
-          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">🖼️ Image not uploaded</div>`;
+          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">ðŸ–¼ï¸ Image not uploaded</div>`;
         });
         const html = toHtml(md);
         document.getElementById('post-title').value = title;
@@ -1074,14 +1096,14 @@
       if (!ok) {
         const div = document.createElement('div');
         div.className = 'md-image-missing';
-        div.textContent = '🖼️ Image not uploaded';
+        div.textContent = 'ðŸ–¼ï¸ Image not uploaded';
         img.replaceWith(div);
         return;
       }
       img.addEventListener('error', function handler() {
         const div = document.createElement('div');
         div.className = 'md-image-missing';
-        div.textContent = '🖼️ Image failed to load';
+        div.textContent = 'ðŸ–¼ï¸ Image failed to load';
         img.replaceWith(div);
         img.removeEventListener('error', handler);
       });
@@ -1102,7 +1124,7 @@
     }
   }
 
-  // ─── TABS ───
+  // â”€â”€â”€ TABS â”€â”€â”€
   const btns = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.tab-panel');
   btns.forEach(btn => {
@@ -1115,33 +1137,73 @@
     });
   });
 
-  // ─── ADMIN (Ctrl+Shift+A or double-click logo) ───
+  // â”€â”€â”€ ADMIN (Ctrl+Shift+A or double-click logo) â”€â”€â”€
   function openAdmin() {
     document.getElementById('admin-overlay').classList.add('open');
     document.getElementById('admin-error').textContent = '';
-    document.getElementById('admin-pw').value = '';
+    if (auth.currentUser) {
+      showAdminPanel();
+    } else {
+      document.getElementById('admin-login').style.display = 'block';
+      document.getElementById('admin-panel').style.display = 'none';
+      document.getElementById('admin-email').value = '';
+      document.getElementById('admin-pw').value = '';
+    }
   }
   document.querySelector('.logo').addEventListener('dblclick', function(e) {
     e.preventDefault();
     openAdmin();
   });
 
-  function adminLogin() {
+  function friendlyError(code) {
+    const map = {
+      'auth/invalid-email': 'Invalid email address.',
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/email-already-in-use': 'An account already exists with this email.',
+      'auth/weak-password': 'Password should be at least 6 characters.',
+      'auth/network-request-failed': 'Network error. Check your connection.',
+      'auth/too-many-requests': 'Too many attempts. Try again later.'
+    };
+    return map[code] || 'Authentication failed.';
+  }
+
+  async function adminLogin() {
+    const email = document.getElementById('admin-email').value.trim();
     const pw = document.getElementById('admin-pw').value;
-    if (pw === ADMIN_PASSWORD) {
-      document.getElementById('admin-login').style.display = 'none';
-      document.getElementById('admin-panel').style.display = 'block';
-      document.getElementById('admin-error').textContent = '';
-      renderAdminPosts();
-    } else {
-      document.getElementById('admin-error').textContent = 'Incorrect password.';
+    if (!email || !pw) { document.getElementById('admin-error').textContent = 'Enter email and password.'; return; }
+    try {
+      await auth.signInWithEmailAndPassword(email, pw);
+      showAdminPanel();
+    } catch(e) {
+      document.getElementById('admin-error').textContent = friendlyError(e.code);
     }
   }
 
+  async function adminRegister() {
+    const email = document.getElementById('admin-email').value.trim();
+    const pw = document.getElementById('admin-pw').value;
+    if (!email || !pw) { document.getElementById('admin-error').textContent = 'Enter email and password.'; return; }
+    if (pw.length < 6) { document.getElementById('admin-error').textContent = 'Password must be at least 6 characters.'; return; }
+    try {
+      await auth.createUserWithEmailAndPassword(email, pw);
+      showAdminPanel();
+    } catch(e) {
+      document.getElementById('admin-error').textContent = friendlyError(e.code);
+    }
+  }
+
+  function showAdminPanel() {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('admin-error').textContent = '';
+    renderAdminPosts();
+  }
+
   function adminLogout() {
+    auth.signOut();
     document.getElementById('admin-login').style.display = 'block';
     document.getElementById('admin-panel').style.display = 'none';
-    document.getElementById('admin-pw').value = '';
     editingId = null;
   }
 
@@ -1150,6 +1212,17 @@
     clearForm();
     adminLogout();
   }
+
+  auth.onAuthStateChanged(user => {
+    const overlay = document.getElementById('admin-overlay');
+    if (overlay && overlay.classList.contains('open')) {
+      if (user) showAdminPanel();
+      else {
+        document.getElementById('admin-login').style.display = 'block';
+        document.getElementById('admin-panel').style.display = 'none';
+      }
+    }
+  });
 
   function clearForm() {
     document.getElementById('post-title').value = '';
@@ -1164,7 +1237,7 @@
     document.getElementById('save-post-btn').textContent = 'Publish Post';
   }
 
-  function savePost() {
+  async function savePost() {
     const title = document.getElementById('post-title').value.trim();
     const category = document.getElementById('post-cat').value;
     const excerpt = document.getElementById('post-excerpt').value.trim();
@@ -1173,40 +1246,31 @@
       showToast('Please fill in all fields.');
       return;
     }
-    const posts = getPosts();
-    if (editingId !== null) {
-      const idx = posts.findIndex(p => p.id === editingId);
-      if (idx !== -1) {
-        posts[idx] = { ...posts[idx], title, category, excerpt, content };
+    if (!auth.currentUser) { showToast('Sign in to publish.'); return; }
+    const data = { title, category, excerpt, content, date: new Date().toISOString().split('T')[0] };
+    try {
+      if (editingId) {
+        await db.collection('posts').doc(editingId).update(data);
+        showToast('Post updated.');
+      } else {
+        await db.collection('posts').add({ ...data, featured: false, likes: 0 });
+        showToast('Post published.');
       }
-      showToast('Post updated.');
-    } else {
-      const newPost = {
-        id: Date.now(),
-        title,
-        category,
-        excerpt,
-        content,
-        date: new Date().toISOString().split('T')[0],
-        featured: posts.length === 0
-      };
-      posts.unshift(newPost);
-      showToast('Post published.');
+      await renderPosts();
+      await renderAdminPosts();
+      clearForm();
+    } catch(e) {
+      showToast('Failed to save: ' + e.message);
     }
-    savePosts(posts);
-    renderPosts();
-    renderAdminPosts();
-    clearForm();
   }
 
   function editPost(id) {
-    const posts = getPosts();
-    const p = posts.find(p => p.id === id);
+    const p = postsCache.find(x => x.id === id);
     if (!p) return;
     editingId = id;
     document.getElementById('post-title').value = p.title;
-    document.getElementById('post-cat').value = p.category;
-    document.getElementById('post-excerpt').value = p.excerpt;
+    document.getElementById('post-cat').value = p.category || 'General';
+    document.getElementById('post-excerpt').value = p.excerpt || '';
     document.getElementById('post-content').value = p.content;
     document.getElementById('save-post-btn').textContent = 'Update Post';
     const preview = document.getElementById('content-preview');
@@ -1215,20 +1279,28 @@
     if (ta) ta.style.display = 'block';
   }
 
-  function deletePost(id) {
+  async function deletePost(id) {
     if (!confirm('Delete this post?')) return;
-    let posts = getPosts();
-    posts = posts.filter(p => p.id !== id);
-    if (posts.length > 0) posts[0].featured = true;
-    savePosts(posts);
-    renderPosts();
-    renderAdminPosts();
-    showToast('Post deleted.');
+    try {
+      await db.collection('posts').doc(id).delete();
+      const cSnap = await db.collection('posts').doc(id).collection('comments').get();
+      const batch = db.batch();
+      cSnap.forEach(doc => batch.delete(doc.ref));
+      if (!cSnap.empty) await batch.commit();
+      await renderPosts();
+      await renderAdminPosts();
+      showToast('Post deleted.');
+    } catch(e) {
+      showToast('Failed to delete: ' + e.message);
+    }
   }
 
-  function renderAdminPosts() {
+  async function renderAdminPosts() {
     const list = document.getElementById('admin-post-list');
-    const posts = getPosts();
+    let posts = postsCache;
+    if (!posts.length) {
+      try { posts = await getPosts(); postsCache = posts; } catch(e) {}
+    }
     if (!posts.length) {
       list.innerHTML = '<p style="color:var(--mgray);font-size:0.85rem;text-align:center;padding:1rem 0">No posts yet.</p>';
       return;
@@ -1236,17 +1308,17 @@
     list.innerHTML = '<div class="section-label" style="margin-top:0">Manage Posts</div>' +
       posts.map(p => `
         <div class="admin-post-item">
-          <span class="title">${p.title}</span>
-          <span style="font-size:0.72rem;color:var(--mgray);font-family:var(--font-mono);margin-right:8px">${p.date}</span>
+          <span class="title">${escapeHtml(p.title)}</span>
+          <span style="font-size:0.72rem;color:var(--mgray);font-family:var(--font-mono);margin-right:8px">${p.date || ''}</span>
           <div class="actions">
-            <button onclick="editPost(${p.id})">Edit</button>
-            <button class="del" onclick="deletePost(${p.id})">Del</button>
+            <button onclick="editPost('${p.id}')">Edit</button>
+            <button class="del" onclick="deletePost('${p.id}')">Del</button>
           </div>
         </div>
       `).join('');
   }
 
-  // ─── TOAST ───
+  // â”€â”€â”€ TOAST â”€â”€â”€
   function showToast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;
@@ -1254,18 +1326,16 @@
     setTimeout(() => el.classList.remove('show'), 2500);
   }
 
-  // ─── INIT ───
-  (function init() {
-    console.log('[VedBlog] Initializing...');
-    const p = getPosts();
-    if (!p || p.length === 0) {
-      console.warn('[VedBlog] No posts found, resetting defaults.');
-      localStorage.removeItem('ved_blog_version');
-      localStorage.removeItem('ved_blog_posts');
-      renderPosts();
-    } else {
-      console.log('[VedBlog] Loaded', p.length, 'post(s):', p.map(x => x.title));
-      renderPosts();
+  // â”€â”€â”€ INIT â”€â”€â”€
+  (async function init() {
+    console.log('[VedBlog] Initializing Firebase...');
+    try {
+      await seedIfEmpty();
+      await renderPosts();
+      console.log('[VedBlog] Ready.');
+    } catch(e) {
+      console.error('[VedBlog] Init failed:', e);
+      document.getElementById('post-grid').innerHTML = '<div class="empty-state">Failed to load posts. Check Firebase setup and Firestore rules.</div>';
     }
   })();
 </script>

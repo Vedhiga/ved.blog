@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Posts: anyone can read. Only signed-in users (admin) can create/edit/delete.
+    // The 'likes' field can be updated by anyone (visitors can like).
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, delete: if request.auth != null;
+      allow update: if request.auth != null
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+    }
+
+    // Comments: anyone can read and write.
+    match /posts/{postId}/comments/{commentId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
