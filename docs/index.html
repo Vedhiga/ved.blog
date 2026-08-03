@@ -871,7 +871,9 @@
     document.getElementById('modal-cat').textContent = p.category;
     document.getElementById('modal-title').textContent = p.title;
     document.getElementById('modal-meta').textContent = p.date;
-    document.getElementById('modal-body').innerHTML = p.content;
+    const body = document.getElementById('modal-body');
+    body.innerHTML = p.content;
+    setupImgFallback(body);
     renderLikes();
     renderComments();
     document.getElementById('post-modal').classList.add('open');
@@ -1003,6 +1005,14 @@
     return h;
   }
 
+  function resolveImgSrc(src, map) {
+    let clean = src.split('#')[0].split('?')[0].trim();
+    try { clean = decodeURIComponent(clean); } catch(e) {}
+    const key = clean.split(/[\\/]/).pop().toLowerCase();
+    const base = key.replace(/\.[^.]+$/, '');
+    return map[key] || map[base] || null;
+  }
+
   function importMarkdown(event) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
@@ -1025,25 +1035,57 @@
         const h1Match = md.match(/^#\s+(.+)$/m);
         const title = h1Match ? h1Match[1].trim() : mdFile.name.replace(/\.md$/i, '').replace(/[-_]+/g, ' ');
         if (h1Match) md = md.replace(/^#\s+.+\n?/, '');
+        let refs = 0, missing = 0;
         md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-          const clean = src.split('#')[0].split('?')[0];
-          const key = clean.split(/[\\/]/).pop().toLowerCase();
-          const base = key.replace(/\.[^.]+$/, '');
-          const data = map[key] || map[base];
+          refs++;
+          const data = resolveImgSrc(src, map);
           if (data) return `![${alt}](${data})`;
-          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(clean)}">🖼️ ${escapeHtml(alt) || 'Image not uploaded'}</div>`;
+          missing++;
+          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">🖼️ ${escapeHtml(alt) || 'Image not uploaded'}</div>`;
+        });
+        md = md.replace(/<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>/gi, (match, src) => {
+          refs++;
+          const data = resolveImgSrc(src, map);
+          if (data) return `<img src="${data}" alt="">`;
+          missing++;
+          return `<div class="md-image-missing" title="Missing image: ${escapeHtml(src)}">🖼️ Image not uploaded</div>`;
         });
         const html = toHtml(md);
         document.getElementById('post-title').value = title;
         document.getElementById('post-content').value = html;
         document.getElementById('post-excerpt').value = title;
-        document.getElementById('content-preview').innerHTML = html;
-        document.getElementById('content-preview').style.display = 'block';
-        showToast('Markdown imported. Review the preview, then publish.');
+        const preview = document.getElementById('content-preview');
+        preview.innerHTML = html;
+        setupImgFallback(preview);
+        preview.style.display = 'block';
+        const msg = `Imported: ${refs} image(s)${missing ? `, ${missing} missing` : ' embedded'}. Review & publish.`;
+        showToast(msg);
       };
       reader.readAsText(mdFile);
     });
     event.target.value = '';
+  }
+
+  function setupImgFallback(container) {
+    if (!container) return;
+    container.querySelectorAll('img').forEach(img => {
+      const src = img.getAttribute('src') || '';
+      const ok = src.startsWith('data:') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('blob:');
+      if (!ok) {
+        const div = document.createElement('div');
+        div.className = 'md-image-missing';
+        div.textContent = '🖼️ Image not uploaded';
+        img.replaceWith(div);
+        return;
+      }
+      img.addEventListener('error', function handler() {
+        const div = document.createElement('div');
+        div.className = 'md-image-missing';
+        div.textContent = '🖼️ Image failed to load';
+        img.replaceWith(div);
+        img.removeEventListener('error', handler);
+      });
+    });
   }
 
   function togglePreview() {
@@ -1054,6 +1096,7 @@
       textarea.style.display = 'block';
     } else {
       preview.innerHTML = textarea.value;
+      setupImgFallback(preview);
       preview.style.display = 'block';
       textarea.style.display = 'none';
     }
