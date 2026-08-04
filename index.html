@@ -416,14 +416,6 @@ footer .flinks a:hover{color:var(--pink);}
    ⚠️ TODO: Replace with YOUR existing Firebase project config
    (copy this block from your current index.html on ved-blog.vercel.app)
    ========================================================= */
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCBwrlJWc_2GtQhlviN5KPnc_s_xmH6ouE",
   authDomain: "vedhiga-s-blog.firebaseapp.com",
@@ -433,10 +425,6 @@ const firebaseConfig = {
   appId: "1:876154252514:web:0106a2eb7eed95d42fc2bb",
   measurementId: "G-X444WPG714"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
