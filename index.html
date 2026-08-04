@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vedhiga — Blog</title>
+<meta name="description" content="Data Explorer · Math Nerd · Space Dreamer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{
+  --white:#ffffff;
+  --black:#111111;
+  --blue:#2563eb;
+  --yellow:#fbbf24;
+  --pink:#f472b6;
+  --gray:#6b7280;
+  --border:rgba(17,17,17,0.08);
+  --radius:16px;
+  --font-display:'Fraunces', serif;
+  --font-body:'Inter', system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  color:var(--black);
+  background:var(--white);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+}
+img{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+
+/* ---------- NAV ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 6vw;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-brand{font-family:var(--font-display);font-weight:700;font-size:1.3rem;letter-spacing:-0.02em;}
+.nav-brand span{background:linear-gradient(90deg,var(--blue),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.nav-tabs{display:flex;gap:6px;background:#f4f4f5;padding:5px;border-radius:999px;}
+.nav-tab{
+  padding:9px 20px;border-radius:999px;font-weight:600;font-size:0.92rem;
+  color:var(--gray);transition:all .25s ease;
+}
+.nav-tab.active{background:var(--black);color:var(--white);}
+.nav-tab:not(.active):hover{color:var(--black);}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  padding:14vh 6vw 10vh;
+  background:linear-gradient(115deg,#fff 0%,#fff 40%,rgba(251,191,36,0.14) 65%,rgba(244,114,182,0.16) 100%);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 85% 15%,rgba(37,99,235,0.12),transparent 45%);
+  animation:drift 12s ease-in-out infinite alternate;
+}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(-3%,3%)}}
+.hero-inner{position:relative;max-width:820px;}
+.eyebrow{
+  display:inline-block;font-size:0.8rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:18px;
+}
+.hero h1{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(2.6rem,6vw,4.6rem);
+  line-height:1.05;letter-spacing:-0.02em;margin-bottom:20px;
+}
+.hero h1 .grad{
+  background:linear-gradient(90deg,var(--blue),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent;font-style:italic;
+}
+.subtitle{
+  font-size:1.25rem;color:var(--gray);margin-bottom:36px;min-height:1.6em;font-weight:500;
+}
+.subtitle::after{content:'|';color:var(--pink);animation:blink 1s step-start infinite;}
+@keyframes blink{50%{opacity:0;}}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 30px;border-radius:999px;font-weight:700;font-size:0.95rem;
+  background:var(--black);color:var(--white);transition:transform .2s ease, box-shadow .2s ease;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.18);}
+.btn.yellow{background:var(--yellow);color:var(--black);}
+
+/* ---------- SECTIONS ---------- */
+.section{padding:6vh 6vw;max-width:1200px;margin:0 auto;}
+.section-title{
+  font-family:var(--font-display);font-weight:600;font-size:1.9rem;margin-bottom:6px;letter-spacing:-0.01em;
+}
+.section-sub{color:var(--gray);margin-bottom:32px;}
+
+/* ---------- POST GRID / CARDS ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+.card{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.6);
+  backdrop-filter:blur(10px);
+  padding:22px;
+  transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  cursor:pointer;
+  display:flex;flex-direction:column;gap:12px;
+}
+.card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 18px 40px rgba(17,17,17,0.12);border-color:var(--pink);}
+.card.featured{
+  grid-column:1/-1;
+  padding:36px;
+  border:2px solid transparent;
+  background:
+    linear-gradient(var(--white),var(--white)) padding-box,
+    linear-gradient(120deg,var(--yellow),var(--pink)) border-box;
+}
+.badge{
+  align-self:flex-start;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+  background:var(--pink);color:var(--white);padding:5px 12px;border-radius:999px;
+}
+.card h3{font-family:var(--font-display);font-size:1.3rem;font-weight:600;letter-spacing:-0.01em;}
+.card .excerpt{color:var(--gray);font-size:0.94rem;flex:1;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;}
+.tag{
+  font-size:0.72rem;font-weight:700;background:rgba(251,191,36,0.25);color:#92620b;
+  padding:4px 10px;border-radius:999px;
+}
+.card-meta{display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;color:var(--gray);margin-top:4px;}
+.like-pill{display:flex;align-items:center;gap:5px;font-weight:600;}
+
+/* search / filter */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px;}
+.controls input, .controls select{
+  padding:11px 16px;border-radius:999px;border:1px solid var(--border);font-family:inherit;font-size:0.9rem;background:#fafafa;
+}
+.controls input{flex:1;min-width:200px;}
+.chip{padding:8px 16px;border-radius:999px;border:1px solid var(--border);font-size:0.85rem;font-weight:600;color:var(--gray);}
+.chip.active{background:var(--black);color:var(--white);border-color:var(--black);}
+
+/* ---------- ABOUT ---------- */
+.about-card{
+  display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;
+  background:linear-gradient(120deg,rgba(37,99,235,0.05),rgba(244,114,182,0.06));
+  border:1px solid var(--border);border-radius:24px;padding:44px;
+}
+.avatar{
+  width:120px;height:120px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--pink),var(--yellow));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:2.4rem;color:#fff;font-weight:700;flex-shrink:0;
+}
+.about-body{flex:1;min-width:260px;}
+.about-body h2{font-family:var(--font-display);font-size:2rem;margin-bottom:6px;}
+.about-body p.role{color:var(--blue);font-weight:600;margin-bottom:16px;}
+.about-body p.bio{color:var(--black);margin-bottom:22px;max-width:60ch;}
+.social-links{display:flex;gap:12px;margin-bottom:20px;}
+.social-links a{
+  padding:10px 20px;border-radius:999px;border:1.5px solid var(--black);font-weight:700;font-size:0.88rem;
+  transition:all .2s;
+}
+.social-links a:hover{background:var(--black);color:var(--white);}
+.interests{display:flex;flex-wrap:wrap;gap:8px;}
+.interest{background:var(--yellow);color:var(--black);font-weight:700;font-size:0.78rem;padding:6px 14px;border-radius:999px;}
+
+/* ---------- MODAL ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(17,17,17,0.55);backdrop-filter:blur(4px);
+  display:none;align-items:flex-start;justify-content:center;z-index:200;overflow-y:auto;padding:5vh 4vw;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--white);border-radius:24px;max-width:760px;width:100%;padding:48px;position:relative;
+  box-shadow:0 30px 80px rgba(0,0,0,0.35);
+}
+.modal-close{
+  position:absolute;top:22px;right:22px;width:36px;height:36px;border-radius:50%;background:#f4f4f5;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;
+}
+.modal-close:hover{background:var(--pink);color:#fff;}
+.modal-meta{display:flex;gap:12px;align-items:center;color:var(--gray);font-size:0.85rem;margin-bottom:14px;}
+.modal h2{font-family:var(--font-display);font-size:2.1rem;margin-bottom:18px;letter-spacing:-0.01em;}
+.article{line-height:1.75;font-size:1.02rem;}
+.article h1,.article h2,.article h3{font-family:var(--font-display);margin:24px 0 10px;}
+.article p{margin-bottom:14px;}
+.article a{color:var(--blue);text-decoration:underline;}
+.article code{background:#f4f4f5;color:var(--blue);padding:2px 6px;border-radius:6px;font-size:0.9em;}
+.article pre{background:#111;color:#eee;padding:16px;border-radius:12px;overflow-x:auto;margin-bottom:14px;}
+.article blockquote{border-left:3px solid var(--blue);padding-left:16px;color:var(--gray);margin:14px 0;}
+.like-row{display:flex;align-items:center;gap:16px;margin:26px 0;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.like-btn{
+  display:flex;align-items:center;gap:8px;font-weight:700;padding:10px 20px;border-radius:999px;border:1.5px solid var(--border);
+  transition:all .2s;
+}
+.like-btn.liked{background:var(--pink);color:#fff;border-color:var(--pink);}
+.like-btn:hover{transform:scale(1.04);}
+
+/* comments */
+.comments-section h3{font-family:var(--font-display);font-size:1.3rem;margin-bottom:16px;}
+.comment-form{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.comment-form input, .comment-form textarea{
+  padding:12px 16px;border-radius:12px;border:1px solid var(--border);font-family:inherit;font-size:0.92rem;background:#fafafa;resize:vertical;
+}
+.comment-list{display:flex;flex-direction:column;gap:14px;}
+.comment{background:#fafafa;border-radius:14px;padding:14px 18px;}
+.comment strong{color:var(--blue);}
+.comment .ctime{font-size:0.75rem;color:var(--gray);margin-left:8px;}
+.comment p{margin-top:4px;font-size:0.92rem;}
+
+/* ---------- ADMIN ---------- */
+.admin-wrap{max-width:760px;margin:0 auto;padding:8vh 6vw;}
+.admin-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:36px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,0.05);}
+.admin-card h2{font-family:var(--font-display);margin-bottom:20px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--gray);}
+.field input, .field select, .field textarea{
+  width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:0.92rem;background:#fafafa;
+}
+.field textarea{min-height:160px;resize:vertical;font-family:monospace;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.post-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);gap:10px;}
+.post-row .ptitle{font-weight:700;}
+.post-row .pactions{display:flex;gap:8px;}
+.small-btn{padding:7px 14px;border-radius:8px;font-size:0.8rem;font-weight:700;border:1px solid var(--border);}
+.small-btn.danger{color:#dc2626;border-color:#dc2626;}
+.small-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* ---------- FOOTER ---------- */
+footer{
+  padding:36px 6vw;text-align:center;color:var(--gray);font-size:0.88rem;
+  border-top:1px solid var(--border);
+}
+footer .flinks{display:flex;justify-content:center;gap:18px;margin-bottom:10px;}
+footer .flinks a{font-weight:700;color:var(--black);}
+footer .flinks a:hover{color:var(--pink);}
+
+.empty{color:var(--gray);padding:40px;text-align:center;}
+.hidden{display:none !important;}
+
+@media(max-width:640px){
+  .nav{padding:14px 5vw;}
+  .nav-tab{padding:8px 14px;font-size:0.85rem;}
+  .hero{padding:10vh 6vw 8vh;}
+  .about-card{padding:28px;}
+  .modal{padding:28px;}
+  .row2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand"><span>Vedhiga</span></div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-tab="home">Home</button>
+    <button class="nav-tab" data-tab="posts">Posts</button>
+    <button class="nav-tab" data-tab="about">About</button>
+  </div>
+</nav>
+
+<!-- ============ MAIN SITE ============ -->
+<main id="site">
+
+  <!-- HOME -->
+  <section id="tab-home" class="tab-panel">
+    <div class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow">Personal Blog</span>
+        <h1>Hi, I'm <span class="grad">Vedhiga</span></h1>
+        <div class="subtitle" id="typedSubtitle"></div>
+        <a href="#" class="btn yellow" data-goto="posts">Read the posts →</a>
+      </div>
+    </div>
+    <div class="section">
+      <h2 class="section-title">Latest Posts</h2>
+      <p class="section-sub">Fresh off the press</p>
+      <div class="grid" id="latestGrid"></div>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <section id="tab-posts" class="tab-panel hidden">
+    <div class="section">
+      <h2 class="section-title">All Posts</h2>
+      <p class="section-sub">Search, filter, explore</p>
+      <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search posts...">
+        <div id="tagChips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="grid" id="postsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="tab-about" class="tab-panel hidden">
+    <div class="section">
+      <div class="about-card">
+        <div class="avatar">V</div>
+        <div class="about-body">
+          <h2>Vedhiga</h2>
+          <p class="role">Data Explorer · Math Nerd · Space Dreamer</p>
+          <p class="bio">Welcome to my corner of the internet! I write about the things I'm learning, building, and thinking about — from data and math to whatever rabbit hole I've fallen into this week. Update this bio from the Admin panel or directly in the code.</p>
+          <div class="social-links">
+            <a href="https://github.com/Vedhiga" target="_blank" rel="noopener">GitHub ↗</a>
+            <a href="#" target="_blank" rel="noopener">LinkedIn ↗</a>
+          </div>
+          <div class="interests">
+            <span class="interest">Data Science</span>
+            <span class="interest">Mathematics</span>
+            <span class="interest">Space</span>
+            <span class="interest">Writing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="flinks">
+    <a href="https://github.com/Vedhiga" target="_blank" rel="noopener">GitHub</a>
+    <a href="#" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+  <div>Built with ♥ and Firebase</div>
+</footer>
+
+<!-- ============ POST MODAL ============ -->
+<div class="modal-overlay" id="postModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-meta">
+      <span id="modalCategory" class="badge">Category</span>
+      <span id="modalReadTime">3 min read</span>
+    </div>
+    <h2 id="modalTitle">Title</h2>
+    <div class="article" id="modalContent"></div>
+    <div class="like-row">
+      <button class="like-btn" id="likeBtn">♥ <span id="likeCount">0</span> likes</button>
+    </div>
+    <div class="comments-section">
+      <h3>Comments</h3>
+      <form class="comment-form" id="commentForm">
+        <input type="text" id="commentName" placeholder="Your name" required maxlength="40">
+        <textarea id="commentText" placeholder="Say something nice..." required maxlength="500" rows="3"></textarea>
+        <button type="submit" class="btn" style="align-self:flex-start;">Post Comment</button>
+      </form>
+      <div class="comment-list" id="commentList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN PANEL ============ -->
+<div id="adminRoot" class="hidden">
+  <nav class="nav">
+    <div class="nav-brand"><span>Vedhiga</span> · Studio</div>
+    <button class="btn" id="adminLogoutBtn">Exit</button>
+  </nav>
+
+  <div id="adminLogin" class="admin-wrap">
+    <div class="admin-card">
+      <h2>Admin Login</h2>
+      <div class="field"><label>Email</label><input type="email" id="loginEmail"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPassword"></div>
+      <button class="btn" id="loginBtn">Log in</button>
+      <p id="loginError" style="color:#dc2626;margin-top:12px;font-size:0.85rem;"></p>
+    </div>
+  </div>
+
+  <div id="adminPanel" class="admin-wrap hidden">
+    <div class="admin-card">
+      <h2 id="editorHeading">Create Post</h2>
+      <input type="hidden" id="editingId">
+      <div class="field"><label>Title</label><input type="text" id="pTitle"></div>
+      <div class="row2">
+        <div class="field">
+          <label>Category</label>
+          <select id="pCategory">
+            <option>Tech</option><option>Life</option><option>Space</option><option>Math</option><option>Custom</option>
+          </select>
+        </div>
+        <div class="field"><label>Tags (comma-separated)</label><input type="text" id="pTags" placeholder="ai, python, thoughts"></div>
+      </div>
+      <div class="field"><label>Excerpt</label><input type="text" id="pExcerpt" maxlength="160"></div>
+      <div class="field">
+        <label>Content (Markdown) — drag & drop a .md file below or type directly</label>
+        <textarea id="pContent" placeholder="# Hello world"></textarea>
+        <input type="file" id="mdUpload" accept=".md" style="margin-top:8px;">
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="pFeatured">
+        <label for="pFeatured" style="font-weight:600;">Feature this post</label>
+      </div>
+      <button class="btn" id="savePostBtn">Save Post</button>
+      <button class="btn" id="cancelEditBtn" style="background:#eee;color:#111;margin-left:8px;">Cancel</button>
+      <p id="saveMsg" style="margin-top:10px;font-size:0.85rem;color:var(--blue);"></p>
+    </div>
+
+    <div class="admin-card">
+      <h2>Manage Posts</h2>
+      <div id="adminPostList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   FIREBASE CONFIG
+   ⚠️ TODO: Replace with YOUR existing Firebase project config
+   (copy this block from your current index.html on ved-blog.vercel.app)
+   ========================================================= */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCBwrlJWc_2GtQhlviN5KPnc_s_xmH6ouE",
+  authDomain: "vedhiga-s-blog.firebaseapp.com",
+  projectId: "vedhiga-s-blog",
+  storageBucket: "vedhiga-s-blog.firebasestorage.app",
+  messagingSenderId: "876154252514",
+  appId: "1:876154252514:web:0106a2eb7eed95d42fc2bb",
+  measurementId: "G-X444WPG714"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let allPosts = [];
+let activeTag = null;
+let currentPost = null;
+let commentUnsub = null;
+
+/* =========================================================
+   ADMIN ROUTING — /studio, #studio, or ?admin=true
+   ========================================================= */
+function isAdminRoute(){
+  return window.location.pathname.replace(/\/$/, '') === '/studio'
+      || window.location.hash === '#studio'
+      || new URLSearchParams(window.location.search).get('admin') === 'true';
+}
+function boot(){
+  if(isAdminRoute()){
+    document.getElementById('site').classList.add('hidden');
+    document.querySelector('.nav').classList.add('hidden');
+    document.querySelector('footer').classList.add('hidden');
+    document.getElementById('adminRoot').classList.remove('hidden');
+    initAdmin();
+  } else {
+    initSite();
+  }
+}
+
+/* =========================================================
+   TYPED SUBTITLE
+   ========================================================= */
+function typeSubtitle(){
+  const phrases = ["Data Explorer · Math Nerd · Space Dreamer"];
+  const el = document.getElementById('typedSubtitle');
+  let pi=0, ci=0, deleting=false;
+  function tick(){
+    const phrase = phrases[pi];
+    el.textContent = deleting ? phrase.slice(0, ci--) : phrase.slice(0, ci++);
+    let delay = deleting ? 35 : 60;
+    if(!deleting && ci === phrase.length+1){ delay = 1600; deleting = true; }
+    if(deleting && ci === 0){ deleting = false; pi = (pi+1)%phrases.length; delay = 400; }
+    setTimeout(tick, delay);
+  }
+  tick();
+}
+
+/* =========================================================
+   TAB NAVIGATION
+   ========================================================= */
+function initTabs(){
+  document.querySelectorAll('.nav-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>switchTab(btn.dataset.tab));
+  });
+  document.querySelectorAll('[data-goto]').forEach(el=>{
+    el.addEventListener('click', e=>{ e.preventDefault(); switchTab(el.dataset.goto); });
+  });
+}
+function switchTab(tab){
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('hidden', p.id !== 'tab-'+tab));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* =========================================================
+   READ TIME
+   ========================================================= */
+function readTime(md){
+  const words = (md||'').trim().split(/\s+/).length;
+  return Math.max(1, Math.round(words/200)) + ' min read';
+}
+
+/* =========================================================
+   RENDER: CARDS
+   ========================================================= */
+function cardHTML(post){
+  const tags = (post.tags||[]).slice(0,3).map(t=>`<span class="tag">${escapeHTML(t)}</span>`).join('');
+  return `
+    <div class="card ${post.featured?'featured':''}" data-id="${post.id}">
+      <span class="badge">${escapeHTML(post.category||'General')}</span>
+      <h3>${escapeHTML(post.title)}</h3>
+      <p class="excerpt">${escapeHTML(post.excerpt||'')}</p>
+      <div class="tags">${tags}</div>
+      <div class="card-meta">
+        <span>${readTime(post.content)}</span>
+        <span class="like-pill">♥ ${post.likes||0}</span>
+      </div>
+    </div>`;
+}
+function escapeHTML(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function renderLatest(){
+  const grid = document.getElementById('latestGrid');
+  const latest = [...allPosts].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+  grid.innerHTML = latest.length ? latest.map(cardHTML).join('') : `<div class="empty">No posts yet — check back soon!</div>`;
+  attachCardClicks(grid);
+}
+
+function renderTagChips(){
+  const tagSet = new Set();
+  allPosts.forEach(p=>(p.tags||[]).forEach(t=>tagSet.add(t)));
+  const wrap = document.getElementById('tagChips');
+  wrap.innerHTML = `<button class="chip ${!activeTag?'active':''}" data-tag="">All</button>` +
+    [...tagSet].map(t=>`<button class="chip ${activeTag===t?'active':''}" data-tag="${escapeHTML(t)}">${escapeHTML(t)}</button>`).join('');
+  wrap.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>{ activeTag = c.dataset.tag || null; renderPostsGrid(); renderTagChips(); });
+  });
+}
+
+function renderPostsGrid(){
+  const grid = document.getElementById('postsGrid');
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  let filtered = allPosts.filter(p=>{
+    const matchesQ = !q || p.title.toLowerCase().includes(q) || (p.excerpt||'').toLowerCase().includes(q);
+    const matchesTag = !activeTag || (p.tags||[]).includes(activeTag);
+    return matchesQ && matchesTag;
+  }).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  grid.innerHTML = filtered.length ? filtered.map(cardHTML).join('') : `<div class="empty">No posts match your search.</div>`;
+  attachCardClicks(grid);
+}
+
+function attachCardClicks(container){
+  container.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', ()=>openPost(card.dataset.id));
+  });
+}
+
+/* =========================================================
+   POST MODAL / LIKES / COMMENTS
+   ========================================================= */
+function openPost(id){
+  const post = allPosts.find(p=>p.id===id);
+  if(!post) return;
+  currentPost = post;
+  document.getElementById('modalCategory').textContent = post.category||'General';
+  document.getElementById('modalReadTime').textContent = readTime(post.content);
+  document.getElementById('modalTitle').textContent = post.title;
+  document.getElementById('modalContent').innerHTML = marked.parse(post.content||'');
+  document.getElementById('likeCount').textContent = post.likes||0;
+  const liked = localStorage.getItem('liked_'+post.id) === '1';
+  document.getElementById('likeBtn').classList.toggle('liked', liked);
+  document.getElementById('postModalOverlay').classList.add('open');
+  listenComments(post.id);
+}
+function closePost(){
+  document.getElementById('postModalOverlay').classList.remove('open');
+  if(commentUnsub) commentUnsub();
+  currentPost = null;
+}
+document.getElementById('modalClose').addEventListener('click', closePost);
+document.getElementById('postModalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='postModalOverlay') closePost();
+});
+
+document.getElementById('likeBtn').addEventListener('click', async ()=>{
+  if(!currentPost) return;
+  const key = 'liked_'+currentPost.id;
+  const liked = localStorage.getItem(key) === '1';
+  const ref = db.collection('posts').doc(currentPost.id);
+  try{
+    if(liked){
+      await ref.update({likes: firebase.firestore.FieldValue.increment(-1)});
+      localStorage.removeItem(key);
+    } else {
+      await ref.update({likes: firebase.firestore.FieldValue.increment(1)});
+      localStorage.setItem(key,'1');
+    }
+    const snap = await ref.get();
+    const likes = snap.data().likes || 0;
+    document.getElementById('likeCount').textContent = likes;
+    document.getElementById('likeBtn').classList.toggle('liked', !liked);
+    currentPost.likes = likes;
+  }catch(err){ console.error(err); }
+});
+
+function listenComments(postId){
+  if(commentUnsub) commentUnsub();
+  commentUnsub = db.collection('posts').doc(postId).collection('comments')
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap=>{
+      const list = document.getElementById('commentList');
+      if(snap.empty){ list.innerHTML = `<div class="empty">No comments yet — be the first!</div>`; return; }
+      list.innerHTML = snap.docs.map(d=>{
+        const c = d.data();
+        const time = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : '';
+        return `<div class="comment"><strong>${escapeHTML(c.name)}</strong><span class="ctime">${time}</span><p>${escapeHTML(c.text)}</p></div>`;
+      }).join('');
+    });
+}
+
+document.getElementById('commentForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  if(!currentPost) return;
+  const name = document.getElementById('commentName').value.trim();
+  const text = document.getElementById('commentText').value.trim();
+  if(!name || !text) return;
+  await db.collection('posts').doc(currentPost.id).collection('comments').add({
+    name, text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById('commentText').value='';
+});
+
+/* =========================================================
+   LOAD POSTS (public site)
+   ========================================================= */
+function initSite(){
+  initTabs();
+  typeSubtitle();
+  document.getElementById('searchInput').addEventListener('input', renderPostsGrid);
+  db.collection('posts').orderBy('createdAt','desc').onSnapshot(snap=>{
+    allPosts = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderLatest();
+    renderTagChips();
+    renderPostsGrid();
+  }, err=>{
+    console.error('Firestore error — did you set your firebaseConfig?', err);
+    document.getElementById('latestGrid').innerHTML = `<div class="empty">Connect your Firebase config to load posts.</div>`;
+  });
+}
+
+/* =========================================================
+   ADMIN PANEL
+   ========================================================= */
+function initAdmin(){
+  auth.onAuthStateChanged(user=>{
+    document.getElementById('adminLogin').classList.toggle('hidden', !!user);
+    document.getElementById('adminPanel').classList.toggle('hidden', !user);
+    if(user) loadAdminPosts();
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    try{
+      await auth.signInWithEmailAndPassword(email, password);
+      document.getElementById('loginError').textContent='';
+    }catch(err){
+      document.getElementById('loginError').textContent = err.message;
+    }
+  });
+  document.getElementById('adminLogoutBtn').addEventListener('click', ()=>{
+    auth.signOut();
+    window.location.href = '/';
+  });
+
+  document.getElementById('mdUpload').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=> document.getElementById('pContent').value = reader.result;
+    reader.readAsText(file);
+  });
+
+  document.getElementById('cancelEditBtn').addEventListener('click', resetEditor);
+
+  document.getElementById('savePostBtn').addEventListener('click', async ()=>{
+    const id = document.getElementById('editingId').value;
+    const data = {
+      title: document.getElementById('pTitle').value.trim(),
+      category: document.getElementById('pCategory').value,
+      tags: document.getElementById('pTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+      excerpt: document.getElementById('pExcerpt').value.trim(),
+      content: document.getElementById('pContent').value,
+      featured: document.getElementById('pFeatured').checked,
+    };
+    if(!data.title || !data.content){
+      document.getElementById('saveMsg').textContent = 'Title and content are required.';
+      return;
+    }
+    try{
+      if(id){
+        await db.collection('posts').doc(id).update(data);
+        document.getElementById('saveMsg').textContent = 'Post updated!';
+      } else {
+        data.likes = 0;
+        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('posts').add(data);
+        document.getElementById('saveMsg').textContent = 'Post published!';
+      }
+      resetEditor();
+      loadAdminPosts();
+    }catch(err){
+      document.getElementById('saveMsg').textContent = 'Error: '+err.message;
+    }
+  });
+}
+
+function resetEditor(){
+  document.getElementById('editingId').value='';
+  document.getElementById('editorHeading').textContent='Create Post';
+  document.getElementById('pTitle').value='';
+  document.getElementById('pCategory').value='Tech';
+  document.getElementById('pTags').value='';
+  document.getElementById('pExcerpt').value='';
+  document.getElementById('pContent').value='';
+  document.getElementById('pFeatured').checked=false;
+  document.getElementById('saveMsg').textContent='';
+}
+
+function loadAdminPosts(){
+  db.collection('posts').orderBy('createdAt','desc').get().then(snap=>{
+    const list = document.getElementById('adminPostList');
+    if(snap.empty){ list.innerHTML = `<div class="empty">No posts yet.</div>`; return; }
+    list.innerHTML = snap.docs.map(d=>{
+      const p = d.data();
+      return `
+        <div class="post-row">
+          <span class="ptitle">${escapeHTML(p.title)} ${p.featured?'⭐':''}</span>
+          <div class="pactions">
+            <button class="small-btn" data-edit="${d.id}">Edit</button>
+            <button class="small-btn primary" data-feature="${d.id}">${p.featured?'Unfeature':'Feature'}</button>
+            <button class="small-btn danger" data-delete="${d.id}">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const doc = await db.collection('posts').doc(btn.dataset.edit).get();
+        const p = doc.data();
+        document.getElementById('editingId').value = doc.id;
+        document.getElementById('editorHeading').textContent = 'Edit Post';
+        document.getElementById('pTitle').value = p.title||'';
+        document.getElementById('pCategory').value = p.category||'Tech';
+        document.getElementById('pTags').value = (p.tags||[]).join(', ');
+        document.getElementById('pExcerpt').value = p.excerpt||'';
+        document.getElementById('pContent').value = p.content||'';
+        document.getElementById('pFeatured').checked = !!p.featured;
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    });
+    list.querySelectorAll('[data-feature]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const ref = db.collection('posts').doc(btn.dataset.feature);
+        const doc = await ref.get();
+        await ref.update({featured: !doc.data().featured});
+        loadAdminPosts();
+      });
+    });
+    list.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm('Delete this post permanently?')) return;
+        await db.collection('posts').doc(btn.dataset.delete).delete();
+        loadAdminPosts();
+      });
+    });
+  });
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+boot();
+</script>
+</body>
+</html>
