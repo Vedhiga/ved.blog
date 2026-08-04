@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Visualization Inspired by Ramanujan · dhruv.blog</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--white:#fff;--silver:#f0f0f0;--lgray:#d8d8d8;--mgray:#999;--dgray:#444;--black:#111;--yellow:#f5d700;--ybg:#fffbe6;--blue:#2563eb;--pink:#e91e8c;--lpink:#fce7f3;--mpink:#f9a8d4;--font-serif:'DM Serif Display',Georgia,serif;--font-sans:'Inter',sans-serif;--font-mono:'DM Mono',monospace;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:var(--silver);color:var(--black);font-size:16px;line-height:1.75}
+  header{background:var(--white);border-bottom:1.5px solid var(--lgray);padding:0 2rem;position:sticky;top:0;z-index:10}
+  .hi{max-width:740px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:54px}
+  .logo{font-family:var(--font-serif);font-size:1.2rem;color:var(--black);text-decoration:none}
+  .logo span{color:var(--pink)}
+  .back{font-family:var(--font-mono);font-size:0.73rem;color:var(--mgray);text-decoration:none}
+  .back:hover{color:var(--pink)}
+  article{max-width:660px;margin:3rem auto;padding:0 1.5rem 4rem}
+  .cat{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--pink);margin-bottom:0.8rem}
+  h1{font-family:var(--font-serif);font-size:2.2rem;line-height:1.15;margin-bottom:0.9rem}
+  .meta{font-family:var(--font-mono);font-size:0.73rem;color:var(--mgray);border-bottom:1px solid var(--lgray);padding-bottom:1rem;margin-bottom:2rem}
+  .draft-badge{display:inline-block;background:var(--yellow);color:var(--black);font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.06em;padding:2px 8px;border-radius:999px;margin-left:8px;vertical-align:middle}
+  p{margin-bottom:1.1rem;color:var(--dgray);font-size:0.97rem}
+  h2{font-family:var(--font-serif);font-size:1.35rem;margin:2rem 0 0.6rem;color:var(--black)}
+
+  /* ─ CANVAS VIZ ─ */
+  .viz-wrapper{
+    background:var(--black);border-radius:10px;padding:1.2rem;margin:1.5rem 0;
+    display:flex;flex-direction:column;align-items:center;gap:0.8rem;
+  }
+  .viz-label{font-family:var(--font-mono);font-size:0.7rem;color:var(--mgray);letter-spacing:0.08em}
+  canvas{border-radius:6px;display:block}
+  .viz-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+  .viz-controls label{font-family:var(--font-mono);font-size:0.7rem;color:var(--mgray)}
+  .viz-controls input[type=range]{width:100px;accent-color:var(--pink)}
+  .viz-controls button{
+    font-family:var(--font-mono);font-size:0.7rem;padding:5px 12px;
+    border-radius:999px;background:none;border:1px solid var(--mgray);
+    color:var(--mgray);cursor:pointer;transition:all 0.15s;
+  }
+  .viz-controls button:hover{border-color:var(--pink);color:var(--pink)}
+  .viz-controls button.active{background:var(--pink);border-color:var(--pink);color:#fff}
+
+  .quote-pink{
+    background:var(--lpink);border-left:3px solid var(--pink);
+    border-radius:0 8px 8px 0;padding:0.9rem 1.1rem;margin:1.4rem 0;
+    font-family:var(--font-serif);font-size:1rem;font-style:italic;
+  }
+  .quote-pink cite{display:block;margin-top:0.4rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--pink);font-style:normal}
+
+  .formula{
+    background:var(--ybg);border:1px solid #e8cc00;border-radius:8px;
+    padding:0.9rem 1.1rem;margin:1.4rem 0;
+    font-family:var(--font-mono);font-size:0.88rem;color:#5a4e00;
+    text-align:center;letter-spacing:0.02em;
+  }
+  .todo{background:var(--lpink);border-left:3px solid var(--pink);border-radius:0 8px 8px 0;padding:0.8rem 1rem;margin-top:2rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--pink)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hi">
+    <a class="logo" href="../index.html">dhruv<span>.</span>blog</a>
+    <a class="back" href="../index.html">← Back</a>
+  </div>
+</header>
+<article>
+  <div class="cat">∑ Mathematics</div>
+  <h1>A Visualization Inspired by Ramanujan</h1>
+  <div class="meta">Draft — May 2025 · 6 min read · by Dhruv <span class="draft-badge">DRAFT</span></div>
+
+  <p>Srinivasa Ramanujan had almost no formal training. He grew up in Kumbakonam — not so far from where I am now — and filled notebooks with identities that professional mathematicians couldn't prove for decades. He said his formulas came to him in dreams, from the goddess Namagiri.</p>
+
+  <p>Whether divine or not, his mathematics is undeniably beautiful. This post is my attempt to <em>see</em> some of it — to turn formulas into pictures.</p>
+
+  <h2>The Taxicab Number — 1729</h2>
+  <p>When Hardy visited a sick Ramanujan in hospital and mentioned he'd arrived in taxi number 1729, Ramanujan immediately replied: "That is a very interesting number — it is the smallest number expressible as the sum of two cubes in two different ways."</p>
+
+  <div class="formula">1729 = 1³ + 12³ = 9³ + 10³</div>
+
+  <p>This wasn't a party trick. It was a symptom of a mind that lived inside numbers the way most of us live inside language. The visualization below explores taxicab-style numbers — integers with multiple cube-sum representations — plotted as a grid.</p>
+
+  <!-- INTERACTIVE VISUALIZATION -->
+  <div class="viz-wrapper">
+    <div class="viz-label">◈ Ramanujan's Number Spiral — Taxicab Pairs up to N</div>
+    <canvas id="ramCanvas" width="560" height="300"></canvas>
+    <div class="viz-controls">
+      <label>N: <input type="range" id="nSlider" min="100" max="5000" value="1729" step="100"></label>
+      <span id="nVal" style="font-family:var(--font-mono);font-size:0.72rem;color:#fff;min-width:40px">1729</span>
+      <button id="btnPairs" class="active" onclick="setMode('pairs')">Taxicab pairs</button>
+      <button id="btnSpiral" onclick="setMode('spiral')">Sum spiral</button>
+    </div>
+  </div>
+
+  <h2>Ramanujan's Infinite Series for π</h2>
+  <p>One of his most stunning results was an infinite series that converges to 1/π with remarkable speed — each term adds roughly 8 correct decimal places of π:</p>
+
+  <div class="formula">1/π = (2√2 / 9801) · Σ [(4k)! · (1103 + 26390k)] / [(k!)⁴ · 396⁴ᵏ]</div>
+
+  <p>This looks like it was conjured from thin air. And yet it works — Gosper used it to compute π to 17 million digits in 1985. It later became the basis of the Chudnovsky algorithm used to compute trillions of digits today.</p>
+
+  <h2>My Reflection</h2>
+  <p>As someone from the same cultural soil — Tamil Nadu, devotion, the feeling that mathematics is something discovered rather than invented — Ramanujan resonates deeply. He saw the sacred in numbers. I think that's not mysticism. I think it's a very precise observation that the universe has arithmetic structure all the way down.</p>
+
+  <div class="quote-pink">
+    "An equation has no meaning unless it expresses a thought of God."
+    <cite>— Srinivasa Ramanujan</cite>
+  </div>
+
+  <div class="todo">📝 TODO: Add π convergence animation · Expand on Hardy-Ramanujan partition theory · Add mock notebook scan</div>
+</article>
+
+<script>
+const canvas = document.getElementById('ramCanvas');
+const ctx = canvas.getContext('2d');
+let mode = 'pairs';
+
+function setMode(m){
+  mode = m;
+  document.getElementById('btnPairs').classList.toggle('active', m==='pairs');
+  document.getElementById('btnSpiral').classList.toggle('active', m==='spiral');
+  draw();
+}
+
+document.getElementById('nSlider').addEventListener('input', function(){
+  document.getElementById('nVal').textContent = this.value;
+  draw();
+});
+
+function findTaxicabPairs(N){
+  const cubeMap = {};
+  const pairs = [];
+  for(let a=1; a*a*a<=N; a++){
+    for(let b=a; b*b*b<=N; b++){
+      const s = a*a*a + b*b*b;
+      if(s<=N){
+        if(!cubeMap[s]) cubeMap[s]=[];
+        cubeMap[s].push([a,b]);
+      }
+    }
+  }
+  for(const [k,v] of Object.entries(cubeMap)){
+    if(v.length>=2) pairs.push({n:+k, ways:v});
+  }
+  return pairs.sort((a,b)=>a.n-b.n);
+}
+
+function draw(){
+  const N = +document.getElementById('nSlider').value;
+  ctx.clearRect(0,0,560,300);
+  ctx.fillStyle='#111';
+  ctx.fillRect(0,0,560,300);
+
+  if(mode==='pairs'){
+    const pairs = findTaxicabPairs(N);
+    const maxN = N;
+    ctx.fillStyle='#444';
+    ctx.font='10px DM Mono, monospace';
+    ctx.fillText('Numbers expressible as sum of 2 cubes in 2+ ways (up to '+N+')', 12, 18);
+
+    pairs.forEach((p,i)=>{
+      const x = 12 + (p.n/maxN)*(536);
+      const y = 60 + (i%5)*40;
+      ctx.beginPath();
+      ctx.arc(x,y,5,0,Math.PI*2);
+      ctx.fillStyle = p.n===1729 ? '#f5d700' : '#e91e8c';
+      ctx.fill();
+      if(p.n===1729){
+        ctx.fillStyle='#f5d700';
+        ctx.font='9px DM Mono,monospace';
+        ctx.fillText('1729 ★',x+7,y+3);
+      }
+    });
+
+    ctx.fillStyle='#555';
+    ctx.font='10px DM Mono,monospace';
+    ctx.fillText('Found: '+pairs.length+' taxicab numbers', 12, 280);
+
+  } else {
+    // Ulam-style spiral of cubes
+    const size = 30;
+    const cols = Math.floor(560/size);
+    const rows = Math.floor(300/size);
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const n = r*cols+c+1;
+        const cb = Math.cbrt(n);
+        const isCube = Math.abs(cb - Math.round(cb)) < 0.001;
+        const isPrime = (function(x){if(x<2)return false;for(let i=2;i<=Math.sqrt(x);i++)if(x%i===0)return false;return true;})(n);
+        let color = '#1a1a1a';
+        if(isCube) color = '#f5d700';
+        else if(isPrime) color = '#e91e8c33';
+        ctx.fillStyle = color;
+        ctx.fillRect(c*size+1,r*size+1,size-2,size-2);
+        if(isCube){
+          ctx.fillStyle='#111';
+          ctx.font='9px DM Mono,monospace';
+          ctx.fillText(n,c*size+4,r*size+16);
+        }
+      }
+    }
+    ctx.fillStyle='#555';
+    ctx.font='10px DM Mono,monospace';
+    ctx.fillText('Yellow = perfect cubes · Pink = primes', 12, 293);
+  }
+}
+draw();
+</script>
+</body>
+</html>
