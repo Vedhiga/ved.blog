@@ -2,5 +2,9 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    { "source": "/studio", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

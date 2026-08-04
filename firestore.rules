@@ -2,19 +2,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Posts: anyone can read. Only signed-in users (admin) can create/edit/delete.
-    // The 'likes' field can be updated by anyone (visitors can like).
+    // Posts: anyone can read.
+    // Only authenticated admins can create, delete, or update non-like fields.
+    // Anyone can update only the 'likes' field (visitor likes).
     match /posts/{postId} {
       allow read: if true;
-      allow create, delete: if request.auth != null;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null;
       allow update: if request.auth != null
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+            && request.resource.data.likes is int
+            && request.resource.data.likes >= 0);
     }
 
-    // Comments: anyone can read and write.
+    // Comments: anyone can read, anyone can create (anonymous comments).
+    // But comments must have 'name' (string), 'text' (string ≤ 1000 chars), and 'time' (string).
+    // No one can update or delete (except admin via console).
     match /posts/{postId}/comments/{commentId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.keys().hasAll(['name', 'text', 'time'])
+        && request.resource.data.name is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 1000
+        && request.resource.data.time is string;
+      allow update, delete: if request.auth != null;
     }
   }
 }
