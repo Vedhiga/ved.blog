@@ -10,7 +10,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
   --white:#ffffff;
@@ -393,6 +395,11 @@ footer .flinks a:hover{color:var(--pink);}
         <textarea id="pContent" placeholder="# Hello world"></textarea>
         <input type="file" id="mdUpload" accept=".md" style="margin-top:8px;">
       </div>
+      <div class="field">
+        <label>Or import from Notion export (.zip)</label>
+        <input type="file" id="zipUpload" accept=".zip" style="margin-top:4px;">
+        <p id="zipStatus" style="margin-top:8px;font-size:0.85rem;color:var(--gray);"></p>
+      </div>
       <div class="toggle-row">
         <input type="checkbox" id="pFeatured">
         <label for="pFeatured" style="font-weight:600;">Feature this post</label>
@@ -427,6 +434,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const storage = firebase.storage();
 
 /* =========================================================
    STATE
@@ -682,6 +690,82 @@ function initAdmin(){
     reader.readAsText(file);
   });
 
+  document.getElementById('zipUpload').addEventListener('change', async e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const status = document.getElementById('zipStatus');
+    status.textContent = 'Extracting zip...';
+    try{
+      const zip = await JSZip.loadAsync(file);
+      // Find markdown file (usually the first .md file)
+      let mdContent = '';
+      let mdFilename = '';
+      const imageFiles = {};
+      
+      for(const [filename, zipEntry] of Object.entries(zip.files)){
+        if(zipEntry.dir) continue;
+        const ext = filename.split('.').pop().toLowerCase();
+        if(ext === 'md' && !mdContent){
+          mdContent = await zipEntry.async('text');
+          mdFilename = filename;
+        } else if(['png','jpg','jpeg','gif','webp','svg'].includes(ext)){
+          const blob = await zipEntry.async('blob');
+          imageFiles[filename] = blob;
+        }
+      }
+      
+      if(!mdContent){
+        status.textContent = 'No .md file found in zip.';
+        return;
+      }
+      
+      // Upload images to Firebase Storage and replace in markdown
+      status.textContent = `Found ${Object.keys(imageFiles).length} images. Uploading...`;
+      const uploadPromises = Object.entries(imageFiles).map(async ([filename, blob]) => {
+        const timestamp = Date.now();
+        const cleanName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const path = `posts/${timestamp}_${cleanName}`;
+        const ref = storage.ref(path);
+        await ref.put(blob);
+        const url = await ref.getDownloadURL();
+        return { original: filename, url };
+      });
+      
+      const uploadedImages = await Promise.all(uploadPromises);
+      const imageMap = Object.fromEntries(uploadedImages.map(img => [img.original, img.url]));
+      
+      // Replace image references in markdown
+      let processedMd = mdContent;
+      for(const [original, url] of Object.entries(imageMap)){
+        // Notion typically uses relative paths like ![image.png] or ![](./image.png)
+        processedMd = processedMd.replace(new RegExp(`!\\[([^\\]]*)\\]\\([^)]*${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^)]*\\)`, 'g'), `![$1](${url})`);
+        processedMd = processedMd.replace(new RegExp(`!\\[([^\\]]*)\\]\\([^)]*${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)`, 'g'), `![$1](${url})`);
+        // Also handle bare filename references
+        processedMd = processedMd.replace(new RegExp(`(${original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g'), url);
+      }
+      
+      // Extract title from first heading if not set
+      const titleMatch = processedMd.match(/^#\s+(.+)$/m);
+      if(titleMatch && !document.getElementById('pTitle').value){
+        document.getElementById('pTitle').value = titleMatch[1].trim();
+      }
+      
+      // Extract excerpt from first paragraph
+      const excerptMatch = processedMd.match(/^#\s+.+\n\n([^#\n].+)/);
+      if(excerptMatch && !document.getElementById('pExcerpt').value){
+        document.getElementById('pExcerpt').value = excerptMatch[1].trim().slice(0, 160);
+      }
+      
+      document.getElementById('pContent').value = processedMd;
+      status.textContent = `✓ Imported: ${mdFilename} (${Object.keys(imageMap).length} images uploaded)`;
+      status.style.color = 'var(--blue)';
+    }catch(err){
+      console.error(err);
+      status.textContent = 'Error: ' + err.message;
+      status.style.color = '#dc2626';
+    }
+  });
+
   document.getElementById('cancelEditBtn').addEventListener('click', resetEditor);
 
   document.getElementById('savePostBtn').addEventListener('click', async ()=>{
@@ -726,6 +810,9 @@ function resetEditor(){
   document.getElementById('pContent').value='';
   document.getElementById('pFeatured').checked=false;
   document.getElementById('saveMsg').textContent='';
+  document.getElementById('zipStatus').textContent='';
+  document.getElementById('zipStatus').style.color='var(--gray)';
+  document.getElementById('zipUpload').value='';
 }
 
 function loadAdminPosts(){
