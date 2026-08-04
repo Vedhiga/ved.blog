@@ -1,5 +1,0 @@
-# Notion export files (used only for markdown import)
-posts/ExportBlock-*/
-*.zip
-
-.vercel
